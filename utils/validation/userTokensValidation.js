@@ -15,6 +15,10 @@ exports.schemaKeys = joi.object({
   tokenExpiredTime: joi.date().options({ convert: true }).allow(null).allow(''),
   isTokenExpired: joi.boolean().default(false),
   isActive: joi.boolean(),
+  addedBy: joi.number().integer().allow(0),
+  updatedBy: joi.number().integer().allow(0),
+  createdAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  updatedAt: joi.date().options({ convert: true }).allow(null).allow(''),
   isDeleted: joi.boolean()
 }).unknown(true);
 
@@ -25,6 +29,10 @@ exports.updateSchemaKeys = joi.object({
   tokenExpiredTime: joi.date().options({ convert: true }).allow(null).allow(''),
   isTokenExpired: joi.boolean().default(false),
   isActive: joi.boolean(),
+  addedBy: joi.number().integer().allow(0),
+  updatedBy: joi.number().integer().allow(0),
+  createdAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  updatedAt: joi.date().options({ convert: true }).allow(null).allow(''),
   isDeleted: joi.boolean(),
   id: joi.number().integer()
 }).unknown(true);
@@ -40,6 +48,10 @@ exports.findFilterKeys = joi.object({
       tokenExpiredTime: joi.alternatives().try(joi.array().items(),joi.date().options({ convert: true }),joi.object()),
       isTokenExpired: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
       isActive: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
+      addedBy: joi.alternatives().try(joi.array().items(),joi.number().integer(),joi.object()),
+      updatedBy: joi.alternatives().try(joi.array().items(),joi.number().integer(),joi.object()),
+      createdAt: joi.alternatives().try(joi.array().items(),joi.date().options({ convert: true }),joi.object()),
+      updatedAt: joi.alternatives().try(joi.array().items(),joi.date().options({ convert: true }),joi.object()),
       isDeleted: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
       id: joi.any()
     }).unknown(true),])

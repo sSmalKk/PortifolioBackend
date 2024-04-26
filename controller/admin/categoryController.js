@@ -8,7 +8,6 @@ const categorySchemaKey = require('../../utils/validation/categoryValidation');
 const validation = require('../../utils/validateRequest');
 const dbService = require('../../utils/dbService');
 const models = require('../../model');
-const deleteDependentService = require('../../utils/deleteDependent');
 const utils = require('../../utils/common');
 
 /**
@@ -26,8 +25,6 @@ const addCategory = async (req, res) => {
     if (!validateRequest.isValid) {
       return res.validationError({ message : `Invalid values in parameters, ${validateRequest.message}` });
     } 
-    dataToCreate.addedBy = req.user.id;
-    delete dataToCreate['updatedBy'];
         
     let createdCategory = await dbService.createOne(Category,dataToCreate);
     return  res.success({ data :createdCategory });
@@ -46,12 +43,6 @@ const bulkInsertCategory = async (req, res)=>{
   try {
     let dataToCreate = req.body.data;   
     if (dataToCreate !== undefined && dataToCreate.length){
-      dataToCreate = dataToCreate.map(item=>{
-        delete item.updatedBy;
-        item.addedBy = req.user.id;
-              
-        return item;
-      });
       let createdCategory = await dbService.createMany(Category,dataToCreate); 
       return  res.success({ data :{ count :createdCategory.length || 0 } });       
     }
@@ -166,11 +157,9 @@ const updateCategory = async (req, res) => {
   try {
     let dataToUpdate = { ...req.body || {} };
     let query = {};
-    delete dataToUpdate.addedBy;
     if (!req.params || !req.params.id) {
       return res.badRequest({ message : 'Insufficient request parameters! id is required.' });
     }          
-    dataToUpdate.updatedBy = req.user.id;
     let validateRequest = validation.validateParamsWithJoi(
       dataToUpdate,
       categorySchemaKey.schemaKeys
@@ -197,10 +186,7 @@ const bulkUpdateCategory = async (req, res)=>{
     let filter = req.body && req.body.filter ? { ...req.body.filter } : {};
     let dataToUpdate = {};
     if (req.body && typeof req.body.data === 'object' && req.body.data !== null) {
-      dataToUpdate = {
-        ...req.body.data,
-        updatedBy:req.user.id
-      };
+      dataToUpdate = {};
     }
     let updatedCategory = await dbService.update(Category,filter,dataToUpdate);
     if (!updatedCategory){
@@ -221,8 +207,6 @@ const bulkUpdateCategory = async (req, res)=>{
 const partialUpdateCategory = async (req, res) => {
   try {
     let dataToUpdate = { ...req.body, };
-    delete dataToUpdate.addedBy;
-    dataToUpdate.updatedBy = req.user.id;
     let validateRequest = validation.validateParamsWithJoi(
       dataToUpdate,
       categorySchemaKey.updateSchemaKeys
@@ -249,20 +233,13 @@ const partialUpdateCategory = async (req, res) => {
  */
 const softDeleteCategory = async (req, res) => {
   try {
-    if (!req.params || !req.params.id) {
-      return res.badRequest({ message : 'Insufficient request parameters! id is required.' });
-    }              
     query = { id:req.params.id };
-    const updateBody = {
-      isDeleted: true,
-      updatedBy: req.user.id
-    };
-    let updatedCategory = await deleteDependentService.softDeleteCategory(query, updateBody);
-    if (!updatedCategory){
+    const updateBody = { isDeleted: true, };
+    let result = await dbService.update(Category, query,updateBody);
+    if (!result){
       return res.recordNotFound();
     }
-    return  res.success({ data :updatedCategory });
-
+    return  res.success({ data :result });
   } catch (error){
     return res.internalServerError({ message:error.message });  
   }
@@ -275,25 +252,8 @@ const softDeleteCategory = async (req, res) => {
  * @return {Object} : deleted Category. {status, message, data}
  */
 const deleteCategory = async (req, res) => {
-  try {
-    let dataToDeleted = req.body;
-    let query = { id:req.params.id };
-    if (dataToDeleted && dataToDeleted.isWarning) {
-      let countedCategory = await deleteDependentService.countCategory(query);
-      if (!countedCategory){
-        return res.recordNotFound();
-      }
-      return res.success({ data :countedCategory });
-    }
-    let deletedCategory = await deleteDependentService.deleteUser(query);
-    if (!deletedCategory){
-      return res.recordNotFound(); 
-    }
-    return  res.success({ data :deletedCategory });    
-  } catch (error){
-    return res.internalServerError({ message:error.message });  
-  }
-
+  const result = await dbService.deleteByPk(Category, req.params.id);
+  return  res.success({ data :result });
 };
 
 /**
@@ -305,24 +265,14 @@ const deleteCategory = async (req, res) => {
 const deleteManyCategory = async (req, res) => {
   try {
     let dataToDelete = req.body;
-    let query = {};
     if (!dataToDelete || !dataToDelete.ids) {
-      return res.badRequest({ message : 'Insufficient request parameters! ids field is required.' });
-    }                              
-    query = { id:{ $in:dataToDelete.ids } };
-    if (dataToDelete.isWarning){
-      let countedCategory = await deleteDependentService.countCategory(query);
-      if (!countedCategory) {
-        return res.recordNotFound();
-      }
-      return res.success({ data: countedCategory });            
-    }
-    let deletedCategory = await deleteDependentService.deleteCategory(query);
-    if (!deletedCategory) {
-      return res.recordNotFound();
-    }
-    return res.success({ data: deletedCategory });          
-  } catch (error){
+      return res.badRequest({ message : 'Insufficient request parameters! ids is required.' });
+    }              
+    let query = { id:{ $in:dataToDelete.ids } };
+    let deletedCategory = await dbService.destroy(Category,query);
+    return res.success({ data :{ count :deletedCategory.length } });
+  }
+  catch (error){
     return res.internalServerError({ message:error.message });  
   }
 };
@@ -335,22 +285,18 @@ const deleteManyCategory = async (req, res) => {
  */
 const softDeleteManyCategory = async (req, res) => {
   try {
-    let dataToUpdate = req.body;
-    let query = {};
-    if (!req.params || !req.params.id){
-      return res.badRequest({ message : 'Insufficient request parameters! id is required.' });
-    }            
-    query = { id:{ $in:dataToUpdate.ids } };
-    const updateBody = {
-      isDeleted: true,
-      updatedBy: req.user.id
-    };
-    let updatedCategory = await deleteDependentService.softDeleteCategory(query, updateBody);
+    let ids = req.body.ids;
+    if (!ids){
+      return res.badRequest({ message : 'Insufficient request parameters! ids is required.' });
+    }
+    const query = { id:{ $in:ids } };
+    const updateBody = { isDeleted: true, };
+    const options = {};
+    let updatedCategory = await dbService.update(Category,query,updateBody, options);
     if (!updatedCategory) {
       return res.recordNotFound();
     }
-    return  res.success({ data :updatedCategory });
-
+    return  res.success({ data :{ count: updatedCategory.length } });
   } catch (error){
     return res.internalServerError({ message:error.message });  
   }

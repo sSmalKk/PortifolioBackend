@@ -12,6 +12,10 @@ const {
 exports.schemaKeys = joi.object({
   name: joi.string().allow(null).allow(''),
   isActive: joi.boolean(),
+  createdAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  updatedAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  addedBy: joi.number().integer().allow(0),
+  updatedBy: joi.number().integer().allow(0),
   isDeleted: joi.boolean()
 }).unknown(true);
 
@@ -19,6 +23,10 @@ exports.schemaKeys = joi.object({
 exports.updateSchemaKeys = joi.object({
   name: joi.string().allow(null).allow(''),
   isActive: joi.boolean(),
+  createdAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  updatedAt: joi.date().options({ convert: true }).allow(null).allow(''),
+  addedBy: joi.number().integer().allow(0),
+  updatedBy: joi.number().integer().allow(0),
   isDeleted: joi.boolean(),
   id: joi.number().integer()
 }).unknown(true);
@@ -31,6 +39,10 @@ exports.findFilterKeys = joi.object({
     keys.map(key => [key, joi.object({
       name: joi.alternatives().try(joi.array().items(),joi.string(),joi.object()),
       isActive: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
+      createdAt: joi.alternatives().try(joi.array().items(),joi.date().options({ convert: true }),joi.object()),
+      updatedAt: joi.alternatives().try(joi.array().items(),joi.date().options({ convert: true }),joi.object()),
+      addedBy: joi.alternatives().try(joi.array().items(),joi.number().integer(),joi.object()),
+      updatedBy: joi.alternatives().try(joi.array().items(),joi.number().integer(),joi.object()),
       isDeleted: joi.alternatives().try(joi.array().items(),joi.boolean(),joi.object()),
       id: joi.any()
     }).unknown(true),])

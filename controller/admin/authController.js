@@ -78,7 +78,7 @@ const forgotPassword = async (req, res) => {
       return res.badRequest({ message : 'Insufficient request parameters! email is required' });
     }
     let where = { email: params.email.toString().toLowerCase() };
-    where.isActive = true;where.isDeleted = false;        let found = await dbService.findOne(user,where);
+    where.isDeleted = false;        let found = await dbService.findOne(user,where);
     if (!found) {
       return res.recordNotFound();
     } 

@@ -26,7 +26,6 @@ let Category = sequelize.define('category',{
   hooks:{
     beforeCreate: [
       async function (category,options){
-        category.isActive = true;
         category.isDeleted = false;
 
       },

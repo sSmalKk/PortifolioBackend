@@ -15,7 +15,6 @@ let Image = sequelize.define('image',{
     autoIncrement:true
   },
   filepath:{ type:DataTypes.STRING },
-  bannerId:{ type:DataTypes.INTEGER },
   isActive:{ type:DataTypes.BOOLEAN },
   createdAt:{ type:DataTypes.DATE },
   updatedAt:{ type:DataTypes.DATE },
@@ -27,7 +26,6 @@ let Image = sequelize.define('image',{
   hooks:{
     beforeCreate: [
       async function (image,options){
-        image.isActive = true;
         image.isDeleted = false;
 
       },

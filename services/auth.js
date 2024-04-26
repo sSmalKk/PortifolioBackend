@@ -42,7 +42,7 @@ const generateToken = async (user,secret) => {
 const loginUser = async (username,password,platform,roleAccess) => {
   try {
     let where = { $or:[{ username:username },{ email:username }] };
-    where.isActive = true;where.isDeleted = false;            const user = await dbService.findOne(model.user,where);
+    where.isDeleted = false;            const user = await dbService.findOne(model.user,where);
     if (!user) {
       return {
         flag:true,
@@ -173,7 +173,7 @@ const changePassword = async (params)=>{
     let password = params.newPassword;
     let oldPassword = params.oldPassword;
     let where = { id:params.userId };
-    where.isActive = true;where.isDeleted = false;        let user = await dbService.findOne(model.user,where);
+    where.isDeleted = false;        let user = await dbService.findOne(model.user,where);
     if (!user || !user.id) {
       return {
         flag:true,
@@ -214,7 +214,6 @@ const sendResetPasswordNotification = async (user) => {
   try {
     const where = {
       id: user.id,
-      isActive: true,
       isDeleted: false,        
     };
     let token = uuid();
@@ -276,7 +275,7 @@ const sendResetPasswordNotification = async (user) => {
 const resetPassword = async (userId, newPassword) => {
   try {
     let where = { id: userId };
-    where.isActive = true;where.isDeleted = false;        const dbUser = await dbService.findOne(model.user,where);
+    where.isDeleted = false;        const dbUser = await dbService.findOne(model.user,where);
     if (!dbUser) {
       return {
         flag: true,

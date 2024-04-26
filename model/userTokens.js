@@ -32,7 +32,6 @@ let UserTokens = sequelize.define('userTokens',{
   hooks:{
     beforeCreate: [
       async function (userTokens,options){
-        userTokens.isActive = true;
         userTokens.isDeleted = false;
 
       },

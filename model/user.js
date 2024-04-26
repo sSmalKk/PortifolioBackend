@@ -24,6 +24,7 @@ let User = sequelize.define('user',{
   updatedAt:{ type:DataTypes.DATE },
   addedBy:{ type:DataTypes.INTEGER },
   updatedBy:{ type:DataTypes.INTEGER },
+  userType:{ type:DataTypes.INTEGER },
   mobileNo:{ type:DataTypes.STRING },
   isDeleted:{ type:DataTypes.BOOLEAN }
 }
@@ -33,7 +34,6 @@ let User = sequelize.define('user',{
       async function (user,options){
         if (user.password){ user.password =
           await bcrypt.hash(user.password, 8);}
-        user.isActive = true;
         user.isDeleted = false;
 
       },

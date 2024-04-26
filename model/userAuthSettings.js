@@ -35,7 +35,6 @@ let UserAuthSettings = sequelize.define('userAuthSettings',{
   hooks:{
     beforeCreate: [
       async function (userAuthSettings,options){
-        userAuthSettings.isActive = true;
         userAuthSettings.isDeleted = false;
 
       },
